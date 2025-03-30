@@ -1,0 +1,47 @@
+* {
+    box-sizing: border-box;
+    font-family: "Courier New", monospace;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    background-color: black;
+    color: #fbcb0a;
+    padding: 20px;
+    font-size: 16px;
+  }
+  
+  .main-container {
+    color: #aa8a0a;
+    max-width: 5000px;
+    margin: auto;
+  }
+  
+  .input-container {
+    display: flex;
+    margin-top: auto;
+  }
+  
+  .input-label {
+    margin-right: 10px;
+    color: #fbcb0a;
+  }
+  
+  .input-command {
+    flex-grow: 10;
+    background: transparent;
+    border: none;
+    color: #fbcb0a;
+    outline: none;
+    font-size: 16px;
+    
+  }
+
+  .intro-block {
+    font-family: "Courier New", monospace;
+    color: #fbcb0a;
+    font-size: 14px;
+    padding-bottom: 20px;
+    white-space: pre;
+  }
