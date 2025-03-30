@@ -1,28 +1,47 @@
-import { content } from './content.js';
 const command = document.getElementById("command");
 const output = document.getElementById("command-output");
+const portfolioAPI = `https://ognd0qs8.api.sanity.io/v2021-10-21/data/query/production?query=*[_type == "personal"][0] {
+  about,
+  email,
+  linkedin,
+  github,
+  website,
+  "projects": *[_type == "projects"] {
+    title,
+    description,
+    url
+  }
+}`;
 
+async function fetchPortfolio() {
+  try {
+    const res = await fetch(portfolioAPI);
+    const data = await res.json();
+    console.log(" Portfolio data from Sanity:", data.result);
+    return data.result;
+  } catch (err) {
+    console.error("Failed to fetch portfolio content from Sanity:", err);
+    output.innerHTML += `<div>Segmentation Fault, Core Dumped :( Try again later or contact with developer... </div>`;
+    return null;
+  }
+}
+
+let activeIntervals = [];
 const commandHistory = [];
 let historyIndex = 0;
 let maxHistorySize = 10;
 const promptPrefix = "ali@sevindik:~ $";
-// const introText = `
-// █████╗  ██╗     ██╗    ███████╗███████╗██╗   ██╗██╗███╗   ██╗██████╗ ██╗██╗  ██╗
-// ██╔══██╗██║     ██║    ██╔════╝██╔════╝██║   ██║██║████╗  ██║██╔══██╗██║██║ ██╔╝
-// ███████║██║     ██║    ███████╗█████╗  ██║   ██║██║██╔██╗ ██║██║  ██║██║█████╔╝ 
-// ██╔══██║██║     ██║    ╚════██║██╔══╝  ╚██╗ ██╔╝██║██║╚██╗██║██║  ██║██║██╔═██╗ 
-// ██║  ██║███████╗██║    ███████║███████╗ ╚████╔╝ ██║██║ ╚████║██████╔╝██║██║  ██╗
-// ╚═╝  ╚═╝╚══════╝╚═╝    ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝╚═╝  ╚═╝
-                                                                                
-// Type 'help' to view a list of available commands.
-// `;
-
-
 const introText = `
-
+█████╗  ██╗     ██╗    ███████╗███████╗██╗   ██╗██╗███╗   ██╗██████╗ ██╗██╗  ██╗
+██╔══██╗██║     ██║    ██╔════╝██╔════╝██║   ██║██║████╗  ██║██╔══██╗██║██║ ██╔╝
+███████║██║     ██║    ███████╗█████╗  ██║   ██║██║██╔██╗ ██║██║  ██║██║█████╔╝ 
+██╔══██║██║     ██║    ╚════██║██╔══╝  ╚██╗ ██╔╝██║██║╚██╗██║██║  ██║██║██╔═██╗ 
+██║  ██║███████╗██║    ███████║███████╗ ╚████╔╝ ██║██║ ╚████║██████╔╝██║██║  ██╗
+╚═╝  ╚═╝╚══════╝╚═╝    ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝╚═╝  ╚═╝
                                                                                 
 Type 'help' to view a list of available commands.
 `;
+
 function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     let index = 0;
   
@@ -38,6 +57,17 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     }, speed);
   }
   
+
+  function typeRawHTML(html, callback = () => {}) {
+    const line = document.createElement("div");
+    line.className = "command-output-line";
+    line.innerHTML = html;
+    output.appendChild(line);
+    output.appendChild(document.createElement("br"));
+    window.scrollTo(0, document.body.scrollHeight);
+    callback();
+  }
+
   function typeOutput(text, callback = () => {}) {
     const line = document.createElement("div");
     line.className = "command-output-line";
@@ -58,6 +88,7 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
         callback();
       }
     }, speed);
+    activeIntervals.push(interval);
   }
   
   window.addEventListener("DOMContentLoaded", () => {
@@ -71,8 +102,12 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     document.querySelector(".input-container").style.display = "none";
   });
   
-  document.addEventListener("click", () => command.focus());
-  
+  document.addEventListener("click", (e) => {
+    const isInsideOutput = e.target.closest("#command-output");
+    if (!isInsideOutput) {
+      command.focus();
+    }
+  });  
   function addCommandToHistory(command) {
     if (command.trim() === "") return;
     commandHistory.push(command);
@@ -138,6 +173,8 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     if (isInterruptKeyPressed(event)) {
       output.innerHTML += `<div>${promptPrefix} ${command.value}<br>^C</div>`;
       clearCommand(command);
+      activeIntervals.forEach(clearInterval);
+      activeIntervals = [];
     }
     if (isTabKeyPressed(event)) {
       event.preventDefault();
@@ -155,8 +192,13 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     output.innerHTML = "";
   };
   
-  const displayWhoAmI = () => {
-    typeOutput("You are a passionate dev exploring the world of code.");
+  // const displayWhoAmI = () => {
+  //   typeOutput("You are a passionate dev exploring the world of code.");
+  // };
+  const displayWhoAmI = async () => {
+    const data = await fetchPortfolio();
+    if (!data?.about) return;
+    typeOutput(data.about);
   };
   
   const displayHelp = () => {
@@ -164,40 +206,27 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     typeOutput(helpText);
   };
   
-  const displayProjects = () => {
-    typeOutput("Here are some of my projects:", () => {
-      typeOutput("- Project 1: A cool web app", () => {
-        typeOutput("- Project 2: Another awesome project");
-      });
-    });
-  };
-  
 
-  const displayFromContent = (key) => {
-    const data = content[key];
-    if (!data) return;
+  const displayProjects = async () => {
+    const data = await fetchPortfolio();
+    if (!data?.projects?.length) return;
   
-    if (Array.isArray(data)) {
-      // Animate line by line
-      const animateLines = (lines, i = 0) => {
-        if (i < lines.length) {
-          typeOutput(lines[i], () => animateLines(lines, i + 1));
-        }
-      };
-      animateLines(data);
-    } else {
-      // Single line
-      typeOutput(data);
+    typeOutput("Here are some of my projects:\n");
+    for (const project of data.projects) {
+      await new Promise(resolve => {
+        typeOutput(`\n- ${project.title}: \n ${project.description} (${project.url})\n\n`, resolve);
+      });
     }
   };
-
-  const displayAbout = () => {
-    typeOutput("\nAbout me: I'm a developer who loves coding and learning new things.", () => {
-      typeOutput("Feel free to explore my projects and connect with me!", () => {
-        typeOutput("Email: your@email.com", () => {
-          typeOutput("LinkedIn: your-linkedin-username", () => {
-            typeOutput("GitHub: your-github-username\n", () => {
-            });
+  const displayContacts = async () => {
+    const data = await fetchPortfolio();
+    if (!data) return;
+  
+    typeOutput("Feel free to connect with me!", () => {
+      typeRawHTML(`Email: <a href="mailto:${data.email}" class="terminal-link">${data.email}</a>`, () => {
+        typeRawHTML(`LinkedIn: <a href="${data.linkedin}" target="_blank" class="terminal-link">${data.linkedin}</a>`, () => {
+          typeRawHTML(`GitHub: <a href="${data.github}" target="_blank" class="terminal-link">${data.github}</a>`, () => {
+            typeRawHTML(`Website: <a href="${data.website}" target="_blank" class="terminal-link">${data.website}</a>`);
           });
         });
       });
@@ -205,11 +234,11 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
   };
   
   const commandFunctions = {
-    help: () => displayFromContent("help"),
-    whoami: () => displayFromContent("whoami"),
-    projects: () => displayFromContent("projects"),
-    contacts: () => displayFromContent("contacts"),
-    clear: displayClear,
+    whoami: displayWhoAmI,
+    projects: displayProjects,
+    contacts: displayContacts,
+    help: displayHelp,
+    clear: displayClear
   };
   
   function handleCommand(cmd) {
