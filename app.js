@@ -1,3 +1,4 @@
+import { content } from './content.js';
 const command = document.getElementById("command");
 const output = document.getElementById("command-output");
 
@@ -5,13 +6,20 @@ const commandHistory = [];
 let historyIndex = 0;
 let maxHistorySize = 10;
 const promptPrefix = "ali@sevindik:~ $";
+// const introText = `
+// █████╗  ██╗     ██╗    ███████╗███████╗██╗   ██╗██╗███╗   ██╗██████╗ ██╗██╗  ██╗
+// ██╔══██╗██║     ██║    ██╔════╝██╔════╝██║   ██║██║████╗  ██║██╔══██╗██║██║ ██╔╝
+// ███████║██║     ██║    ███████╗█████╗  ██║   ██║██║██╔██╗ ██║██║  ██║██║█████╔╝ 
+// ██╔══██║██║     ██║    ╚════██║██╔══╝  ╚██╗ ██╔╝██║██║╚██╗██║██║  ██║██║██╔═██╗ 
+// ██║  ██║███████╗██║    ███████║███████╗ ╚████╔╝ ██║██║ ╚████║██████╔╝██║██║  ██╗
+// ╚═╝  ╚═╝╚══════╝╚═╝    ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝╚═╝  ╚═╝
+                                                                                
+// Type 'help' to view a list of available commands.
+// `;
+
+
 const introText = `
-█████╗  ██╗     ██╗    ███████╗███████╗██╗   ██╗██╗███╗   ██╗██████╗ ██╗██╗  ██╗
-██╔══██╗██║     ██║    ██╔════╝██╔════╝██║   ██║██║████╗  ██║██╔══██╗██║██║ ██╔╝
-███████║██║     ██║    ███████╗█████╗  ██║   ██║██║██╔██╗ ██║██║  ██║██║█████╔╝ 
-██╔══██║██║     ██║    ╚════██║██╔══╝  ╚██╗ ██╔╝██║██║╚██╗██║██║  ██║██║██╔═██╗ 
-██║  ██║███████╗██║    ███████║███████╗ ╚████╔╝ ██║██║ ╚████║██████╔╝██║██║  ██╗
-╚═╝  ╚═╝╚══════╝╚═╝    ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚═╝╚═╝  ╚═╝
+
                                                                                 
 Type 'help' to view a list of available commands.
 `;
@@ -152,7 +160,7 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
   };
   
   const displayHelp = () => {
-    const helpText = `Available commands: ${Object.keys(commandFunctions).join(", ")}`;
+    const helpText = `Available commands:\n ${Object.keys(commandFunctions).join("\n ")}`;
     typeOutput(helpText);
   };
   
@@ -164,6 +172,25 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     });
   };
   
+
+  const displayFromContent = (key) => {
+    const data = content[key];
+    if (!data) return;
+  
+    if (Array.isArray(data)) {
+      // Animate line by line
+      const animateLines = (lines, i = 0) => {
+        if (i < lines.length) {
+          typeOutput(lines[i], () => animateLines(lines, i + 1));
+        }
+      };
+      animateLines(data);
+    } else {
+      // Single line
+      typeOutput(data);
+    }
+  };
+
   const displayAbout = () => {
     typeOutput("\nAbout me: I'm a developer who loves coding and learning new things.", () => {
       typeOutput("Feel free to explore my projects and connect with me!", () => {
@@ -178,10 +205,10 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
   };
   
   const commandFunctions = {
-    help: displayHelp,
-    whoami: displayWhoAmI,
-    projects: displayProjects,
-    contacts: displayAbout,
+    help: () => displayFromContent("help"),
+    whoami: () => displayFromContent("whoami"),
+    projects: () => displayFromContent("projects"),
+    contacts: () => displayFromContent("contacts"),
     clear: displayClear,
   };
   
