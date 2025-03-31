@@ -13,15 +13,31 @@
     <div id="command-output"></div>
 
     <div class="input-container">
-        <label for="command" class="input-label">ali@sevindik:~ $</label>
-        <input
-          type="text"
-          id="command"
-          class="input-command input-text"
-          autofocus
-        />
+      <label for="command" class="input-label">ali@sevindik:~ $</label>
+      <input
+        type="text"
+        id="command"
+        class="input-command input-text"
+        autofocus
+      />
     </div>
   </div>
+
+  <form
+    id="message-form"
+    action="https://formsubmit.co/arduino.hocam@gmail.com"
+    method="POST"
+    target="hidden-frame"
+    style="display: none;"
+  >
+    <input type="hidden" name="_captcha" value="false" />
+    <input type="hidden" name="_template" value="table" />
+    <input type="hidden" name="_next" value="https://arduinohocam.github.io/cmd-portfolio/" />
+    <input type="text" name="name" id="form-name" />
+    <input type="text" name="message" id="form-message" />
+  </form>
+  
+  <iframe name="hidden-frame" style="display:none;"></iframe>
 
   <script type="module" src="app.js"></script>
 </body>

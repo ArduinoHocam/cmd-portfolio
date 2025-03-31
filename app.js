@@ -13,6 +13,12 @@ const portfolioAPI = `https://ognd0qs8.api.sanity.io/v2021-10-21/data/query/prod
   }
 }`;
 
+// TODO: add cancel to send part
+function updatePromptLabel() {
+  const label = document.querySelector(".input-label");
+  label.textContent = sendState ? "> " : "ali@sevindik:~ $";
+}
+
 async function fetchPortfolio() {
   try {
     const res = await fetch(portfolioAPI);
@@ -27,6 +33,7 @@ async function fetchPortfolio() {
 }
 
 let activeIntervals = [];
+let sendState = null;
 const commandHistory = [];
 let historyIndex = 0;
 let maxHistorySize = 10;
@@ -128,7 +135,7 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
   
   const getEnterCommandResult = () => {
     const cmd = command.value.trim();
-    output.innerHTML += `<div>${promptPrefix} ${cmd}</div>`;
+    output.innerHTML += `<div>${sendState ? "> " : promptPrefix} ${cmd}</div>`;
     handleCommand(cmd);
     clearCommand(command);
   };
@@ -191,10 +198,12 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
   const displayClear = () => {
     output.innerHTML = "";
   };
-  
-  // const displayWhoAmI = () => {
-  //   typeOutput("You are a passionate dev exploring the world of code.");
-  // };
+  const displaySend = () => {
+    sendState = { step: 'name', name: '', message: '' };
+    updatePromptLabel();
+    typeOutput("Enter your name:");
+  };
+
   const displayWhoAmI = async () => {
     const data = await fetchPortfolio();
     if (!data?.about) return;
@@ -238,15 +247,40 @@ function typeOutText(text, targetElement, speed = 3, callback = () => {}) {
     projects: displayProjects,
     contacts: displayContacts,
     help: displayHelp,
-    clear: displayClear
+    clear: displayClear,
+    send: displaySend
   };
   
   function handleCommand(cmd) {
     addCommandToHistory(cmd);
+// todo refactor this
+    if (sendState) {
+      if (sendState.step === 'name') {
+        sendState.name = cmd;
+        sendState.step = 'message';
+        typeOutput(`Hello ${sendState.name}! Now enter your message:`);
+        return;
+      } else if (sendState.step === 'message') {
+        sendState.message = cmd;
+
+        // Fill and submit hidden form
+        document.getElementById("form-name").value = sendState.name;
+        document.getElementById("form-message").value = sendState.message;
+        document.getElementById("message-form").submit();
+
+        typeOutput("📬 Message sent! Thank you.");
+        sendState = null;
+        updatePromptLabel();
+        return;
+      }
+    }
+
     if (commandFunctions[cmd]) {
       commandFunctions[cmd](cmd);
     } else {
       displayCommandNotFound(cmd);
     }
+
     window.scrollTo(0, document.body.scrollHeight);
   }
+
